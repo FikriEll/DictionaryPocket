@@ -1,5 +1,7 @@
 package com.fikrielg.dictionarypocket.data.repository
 
+import com.fikrielg.dictionarypocket.data.source.local.HistoryDatabase
+import com.fikrielg.dictionarypocket.data.source.local.entities.History
 import com.fikrielg.dictionarypocket.data.source.remote.DictionaryResponseModel
 import com.fikrielg.dictionarypocket.data.source.remote.ApiInterface
 import com.fikrielg.dictionarypocket.data.source.remote.model.Bookmark
@@ -14,10 +16,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
- class DictionaryRepositoryImpl @Inject constructor(
+
+  class DictionaryRepositoryImpl @Inject constructor(
     private val api: ApiInterface,
     private val client: SupabaseClient,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    private val historyDatabase: HistoryDatabase,
+     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DictionaryRepository {
 
     override suspend fun getDefinition(word: String): Flow<Resource<List<DictionaryResponseModel>>> =
@@ -49,6 +53,17 @@ import javax.inject.Inject
             }
         }.flowOn(ioDispatcher)
 
+     override fun getHistoryList(): Flow<List<History>> {
+         return historyDatabase.historyDao().getHistoryList()
+     }
+
+      override suspend fun addHistory(history: History) {
+         return historyDatabase.historyDao().insertHistory(history)
+     }
+
+      override suspend fun deleteHistory(history: History) {
+          return historyDatabase.historyDao().deleteHistory(history)
+      }
 
 
-}
+  }

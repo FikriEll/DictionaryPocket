@@ -27,13 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fikrielg.dictionarypocket.presentation.screen.destinations.SignUpScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 fun SignInScreen(
+    navigator: DestinationsNavigator,
     modifier: Modifier = Modifier,
     viewModel: SignInViewModel = hiltViewModel()
 ) {
@@ -109,12 +112,21 @@ fun SignInScreen(
                 .padding(top = 12.dp),
                 onClick = {
                     localSoftwareKeyboardController?.hide()
-                    viewModel.onSignIn()
-                    coroutineScope.launch {
-                        snackBarHostState.showSnackbar(
-                            message = "Sign in successfully !",
-                            duration = SnackbarDuration.Long
-                        )
+                    if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
+                        viewModel.onSignIn()
+                        coroutineScope.launch {
+                            snackBarHostState.showSnackbar(
+                                message = "Sign in successfully!",
+                                duration = SnackbarDuration.Long
+                            )
+                        }
+                    } else {
+                        coroutineScope.launch {
+                            snackBarHostState.showSnackbar(
+                                message = "Email and password cannot be empty!",
+                                duration = SnackbarDuration.Long
+                            )
+                        }
                     }
                 }) {
                 Text("Sign in")
@@ -122,7 +134,7 @@ fun SignInScreen(
             OutlinedButton(modifier = modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp), onClick = {
-                    viewModel.onSignIn()
+                navigator.navigate(SignUpScreenDestination)
             }) {
                 Text("Sign up")
             }

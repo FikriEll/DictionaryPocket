@@ -3,6 +3,8 @@ package com.fikrielg.dictionarypocket.di
 import android.content.Context
 import androidx.room.Room
 import com.fikrielg.dictionarypocket.BuildConfig
+import com.fikrielg.dictionarypocket.data.repository.AuthenticationRepository
+import com.fikrielg.dictionarypocket.data.repository.AuthenticationRepositoryImpl
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepositoryImpl
 import com.fikrielg.dictionarypocket.data.source.local.HistoryDatabase
@@ -16,13 +18,7 @@ import dagger.hilt.components.SingletonComponent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
-import io.github.jan.supabase.gotrue.FlowType
-import io.github.jan.supabase.gotrue.SessionSource
-import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.storage.Storage
-import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
@@ -64,6 +60,16 @@ object AppModule {
             install(Auth)
         }
     }
+
+
+    @Singleton
+    @Provides
+    fun provideAuthenticationRepository(
+        client: SupabaseClient
+    ): AuthenticationRepository {
+        return AuthenticationRepositoryImpl(client)
+    }
+
 
 //    @Provides
 //    @Singleton
@@ -121,12 +127,14 @@ object AppModule {
     fun provideDictionaryRepository(
         api: ApiInterface,
         client: SupabaseClient,
-        @IoDispatcher ioDispatcher: CoroutineDispatcher
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        historyDatabase: HistoryDatabase
     ): DictionaryRepository {
         return DictionaryRepositoryImpl(
             api = api,
             client = client,
-            ioDispatcher = ioDispatcher
+            ioDispatcher = ioDispatcher,
+            historyDatabase = historyDatabase
         )
     }
 }

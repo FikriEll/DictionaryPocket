@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
+import com.fikrielg.dictionarypocket.data.source.local.entities.History
 import com.fikrielg.dictionarypocket.data.source.remote.DictionaryResponseModel
 import com.fikrielg.dictionarypocket.util.Resource
 import com.fikrielg.dictionarypocket.util.UiEvents
@@ -14,9 +15,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,6 +38,19 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
 
     private val _eventFlow = MutableSharedFlow<UiEvents>()
     val eventFlow: SharedFlow<UiEvents> = _eventFlow.asSharedFlow()
+
+    val historyState = repository.getHistoryList().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(500),
+        emptyList()
+    )
+
+    fun deleteHistory(history: History){
+        viewModelScope.launch {
+            repository.deleteHistory(history)
+        }
+    }
+
 
     fun getDefinition() {
         _homeUiState.value =
@@ -65,6 +81,18 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
                                 isLoading = false,
                                 definition = response.data
                             )
+                            viewModelScope.launch {
+                                repository.addHistory(
+                                    History(
+                                        id = null,
+                                        meanings = response.data?.get(0)?.meanings,
+                                        origin = response.data?.get(0)?.origin,
+                                        phonetic  = response.data?.get(0)?.phonetic,
+                                        phonetics = response.data?.get(0)?.phonetics,
+                                        word = response.data?.get(0)?.word
+                                    )
+                                )
+                            }
                         }
                         else -> {
                             homeUiState

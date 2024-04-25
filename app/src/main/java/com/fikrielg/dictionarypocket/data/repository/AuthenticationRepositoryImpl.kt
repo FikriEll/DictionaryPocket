@@ -1,5 +1,6 @@
 package com.fikrielg.dictionarypocket.data.repository
 
+import android.util.Log
 import com.fikrielg.dictionarypocket.data.kotpref.AuthPref
 import com.fikrielg.dictionarypocket.data.source.remote.model.Users
 import com.fikrielg.dictionarypocket.util.Resource
@@ -48,6 +49,7 @@ class AuthenticationRepositoryImpl @Inject constructor(
             }
             emit(Resource.Success(true))
         } catch(e: Exception) {
+            Log.d("ERROR SIGN UP", e.message.toString())
             emit(Resource.Error(e.message.toString() ?: "Error Ocurred"))
         }
     }
