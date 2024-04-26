@@ -1,5 +1,6 @@
 package com.fikrielg.dictionarypocket.presentation.screen.home
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,11 +46,16 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
         emptyList()
     )
 
-    fun deleteHistory(history: History){
+    fun deleteHistory(history: History) {
         viewModelScope.launch {
-            repository.deleteHistory(history)
+            try {
+                repository.deleteHistory(history)
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error deleting history", e)
+            }
         }
     }
+
 
 
     fun getDefinition() {

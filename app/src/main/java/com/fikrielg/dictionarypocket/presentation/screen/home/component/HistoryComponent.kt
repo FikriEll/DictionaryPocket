@@ -33,7 +33,7 @@ fun HistoryComponent(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         PronunciationComponent(word = history.word!!, phonetic = history.phonetic!!)
-        IconButton(onClick = { onClick }) {
+        IconButton(onClick = { onClick() }) {
            Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
         }
     }

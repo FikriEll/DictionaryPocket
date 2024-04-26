@@ -1,6 +1,7 @@
 package com.fikrielg.dictionarypocket.presentation.screen.home
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -132,6 +133,7 @@ fun HomeScreen(
             historyList = historyList,
 
             onClickDelete = { history ->
+                Log.d("HomeContent", "History clicked: $history")
                 viewModel.deleteHistory(
                     history
                 )
@@ -183,14 +185,7 @@ fun HomeContent(
                         history = history,
                         onClick = {
                             onClickDelete(
-                                History(
-                                    id = history.id,
-                                    meanings = history.meanings,
-                                    origin = history.origin,
-                                    phonetic = history.phonetic,
-                                    phonetics = history.phonetics,
-                                    word = history.word
-                                )
+                               history
                             )
                         })
                 }
