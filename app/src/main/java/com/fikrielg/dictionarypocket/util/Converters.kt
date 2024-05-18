@@ -1,10 +1,9 @@
 package com.fikrielg.dictionarypocket.util
 
 import androidx.room.TypeConverter
-import com.fikrielg.dictionarypocket.data.source.remote.Meaning
-import com.fikrielg.dictionarypocket.data.source.remote.Phonetic
+import com.fikrielg.dictionarypocket.data.source.remote.model.Meaning
+import com.fikrielg.dictionarypocket.data.source.remote.model.Phonetic
 import com.google.gson.Gson
-
 
 class Converters {
 

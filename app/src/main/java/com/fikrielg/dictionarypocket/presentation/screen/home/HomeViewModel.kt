@@ -1,17 +1,18 @@
 package com.fikrielg.dictionarypocket.presentation.screen.home
 
+import android.content.Context
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
 import com.fikrielg.dictionarypocket.data.source.local.entities.History
-import com.fikrielg.dictionarypocket.data.source.remote.DictionaryResponseModel
-import com.fikrielg.dictionarypocket.util.Resource
+import com.fikrielg.dictionarypocket.data.source.remote.model.DictionaryResponse
+import com.fikrielg.dictionarypocket.data.source.remote.model.Bookmark
 import com.fikrielg.dictionarypocket.util.UiEvents
+import com.rmaprojects.apirequeststate.ResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,14 +23,15 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val repository: DictionaryRepository) :
     ViewModel() {
 
-    private val _homeUiState = MutableStateFlow(HomeUiState())
-    val homeUiState: StateFlow<HomeUiState> = _homeUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _typedWord = mutableStateOf("")
     val typedWord: State<String> = _typedWord
@@ -46,21 +48,23 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
         emptyList()
     )
 
+
     fun deleteHistory(history: History) {
         viewModelScope.launch {
             try {
                 repository.deleteHistory(history)
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Error deleting history", e)
+                Log.e("Error Delete History", "Error deleting history", e)
             }
         }
     }
 
+    private var textToSpeech: TextToSpeech? = null
 
 
     fun getDefinition() {
-        _homeUiState.value =
-            homeUiState.value.copy(
+        _uiState.value =
+            uiState.value.copy(
                 isLoading = true
             )
 
@@ -70,8 +74,8 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
             viewModelScope.launch {
                 repository.getDefinition(word = word).collect { response ->
                     when (response) {
-                        is Resource.Error -> {
-                            _homeUiState.value = homeUiState.value.copy(
+                        is ResponseState.Error -> {
+                            _uiState.value = uiState.value.copy(
                                 isLoading = false,
                                 definition = emptyList()
                             )
@@ -82,26 +86,29 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
                                 )
                             )
                         }
-                        is Resource.Success -> {
-                            _homeUiState.value = homeUiState.value.copy(
+
+                        is ResponseState.Success -> {
+                            _uiState.value = uiState.value.copy(
                                 isLoading = false,
                                 definition = response.data
                             )
                             viewModelScope.launch {
+                                val history = response.data[0]
                                 repository.addHistory(
                                     History(
                                         id = null,
-                                        meanings = response.data?.get(0)?.meanings,
-                                        origin = response.data?.get(0)?.origin,
-                                        phonetic  = response.data?.get(0)?.phonetic,
-                                        phonetics = response.data?.get(0)?.phonetics,
-                                        word = response.data?.get(0)?.word
+                                        meanings = history.meanings,
+                                        origin = history.origin,
+                                        phonetic = history.phonetic,
+                                        phonetics = history.phonetics,
+                                        word = history.word
                                     )
                                 )
                             }
                         }
+
                         else -> {
-                            homeUiState
+                            uiState
                         }
                     }
                 }
@@ -111,10 +118,43 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
         }
     }
 
+    fun addBookmark(bookmarks: Bookmark) {
+        viewModelScope.launch {
+            try {
+                repository.addBookmark(bookmarks).collect {
+                    when(it) {
+                        is ResponseState.Success -> {
+                            Log.d("Success Add Bookmarks", "Successful adding to bookmarks ")
+                        }
+                        else -> {}
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d("Error Add Bookmark", "Error adding bookmark", e)
+            }
+        }
+    }
+
+    fun textToSpeech(context: Context, text: String) {
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.US
+                textToSpeech?.setSpeechRate(1.0f)
+                textToSpeech?.speak(
+                    text,
+                    TextToSpeech.QUEUE_ADD,
+                    null,
+                    null
+                )
+            }
+        }
+    }
+
+
     private fun showErrorMessage() {
         viewModelScope.launch {
-            _homeUiState.value =
-                homeUiState.value.copy(
+            _uiState.value =
+                uiState.value.copy(
                     isLoading = false
                 )
 
@@ -125,12 +165,18 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
             )
         }
     }
+
+
 }
 
 
-data class HomeUiState(
-    val definition: List<DictionaryResponseModel>? = null,
+data class UiState(
+    val definition: List<DictionaryResponse>? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
+
+
+
+
 

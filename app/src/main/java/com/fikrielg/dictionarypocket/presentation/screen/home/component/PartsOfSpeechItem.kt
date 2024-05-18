@@ -3,6 +3,7 @@ package com.fikrielg.dictionarypocket.presentation.screen.home.component
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,7 +20,7 @@ import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 
 @Composable
-fun PartsOfSpeechComponent(
+fun PartsOfSpeechItem(
     headerText: String,
     size: Int,
     color: Color
@@ -37,7 +38,7 @@ fun PartsOfSpeechComponent(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         fontFamily = montserrat,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.background
                     )
                 ) {
                     append("$headerText ")
@@ -46,7 +47,7 @@ fun PartsOfSpeechComponent(
                     style = SpanStyle(
                         fontWeight = FontWeight.Bold,
                         fontFamily = montserrat,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.background
                     )
                 ) {
                     append("($size)")

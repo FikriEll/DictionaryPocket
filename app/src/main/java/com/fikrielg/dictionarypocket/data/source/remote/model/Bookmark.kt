@@ -1,31 +1,16 @@
 package com.fikrielg.dictionarypocket.data.source.remote.model
 
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Serializable
 data class Bookmark(
-    val meanings: List<Meaning>? = null,
-    val origin: String? = null,
-    val phonetic: String? = null,
-    val phonetics: List<Phonetic>? = null,
-    val word: String? = null
+    @SerialName("word")
+    val word: String,
+    @SerialName("user_id")
+    val userId: String,
+    @SerialName("created_at")
+    val createdAt: String? = null,
+    @SerialName("id")
+    val id: Int? = null
 )
-
-data class Meaning(
-    val definitions: List<Definition>? = null,
-    val partOfSpeech: String? = null
-)
-
-data class Definition(
-    val antonyms: List<Any>? = null,
-    val definition: String? = null,
-    val example: String? = null,
-    val synonyms: List<Any>? = null
-)
-
-data class Phonetic(
-    val audio: String? = null,
-    val text: String? = null
-)
-

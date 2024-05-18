@@ -1,15 +1,16 @@
 package com.fikrielg.dictionarypocket.presentation.screen.home.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -24,13 +25,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.fikrielg.dictionarypocket.ui.theme.SkyBlue
+import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SearchTextFieldComponent(
     setWordToBeSearched: (String) -> Unit,
     searchWord: () -> Unit,
-    typedWord: String
+    typedWord: String,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -45,41 +47,34 @@ fun SearchTextFieldComponent(
             .fillMaxWidth()
             .semantics { contentDescription = "SearchTextField" },
         placeholder = {
-            Text("Search here")
+            Text(text = "Search here", fontFamily = montserrat, color = MaterialTheme.colorScheme.onSurface)
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Outlined.Search,
-                contentDescription = "Search"
+                contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onSurface
             )
         },
         trailingIcon = {
             if (typedWord.isNotEmpty()) {
-                Icon(
-                    imageVector = Icons.Outlined.Clear,
-                    contentDescription = "Clear Icon",
-                    modifier = Modifier.clickable {
-                        setWordToBeSearched("")
-                    }
-                )
+                IconButton(onClick = {
+                    setWordToBeSearched("")
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear Icon",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         },
-        shape = RoundedCornerShape(4.dp),
-        colors = TextFieldDefaults
-            .textFieldColors(
-                containerColor = Color(0xFFEBE7E7),
-
-                unfocusedIndicatorColor = Color(0xFFEBE7E7),
-
-                focusedIndicatorColor = SkyBlue
-            ),
+        shape = RoundedCornerShape(30.dp),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(
             onSearch = {
                 searchWord()
-
                 keyboardController?.hide()
-
                 focusManager.clearFocus()
             }
         )

@@ -1,6 +1,6 @@
-package com.fikrielg.dictionarypocket.data.source.remote
+package com.fikrielg.dictionarypocket.data.source.remote.model
 
-data class DictionaryResponseModel(
+data class DictionaryResponse(
     val meanings: List<Meaning>? = null,
     val origin: String? = null,
     val phonetic: String? = null,

@@ -3,8 +3,8 @@ package com.fikrielg.dictionarypocket.data.source.local.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.fikrielg.dictionarypocket.data.source.remote.Meaning
-import com.fikrielg.dictionarypocket.data.source.remote.Phonetic
+import com.fikrielg.dictionarypocket.data.source.remote.model.Meaning
+import com.fikrielg.dictionarypocket.data.source.remote.model.Phonetic
 
 @Entity(tableName = "history")
 data class History(
@@ -20,3 +20,4 @@ data class History(
     @ColumnInfo("word")
     val word: String? = ""
 )
+

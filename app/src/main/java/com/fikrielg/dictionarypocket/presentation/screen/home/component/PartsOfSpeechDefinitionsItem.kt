@@ -2,34 +2,31 @@ package com.fikrielg.dictionarypocket.presentation.screen.home.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.fikrielg.dictionarypocket.data.source.remote.Definition
-import com.fikrielg.dictionarypocket.ui.theme.SkyBlue
+import com.fikrielg.dictionarypocket.data.source.remote.model.Definition
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 
 @Composable
-fun PartsOfSpeechDefinitionsComponent(
+fun PartsOfSpeechDefinitionsItem(
     partsOfSpeech: String,
     definitions: List<Definition>?
 ) {
     Column {
-        PartsOfSpeechComponent(
+        PartsOfSpeechItem(
             headerText = partsOfSpeech,
             size = definitions?.size ?: 0,
-            color = SkyBlue
+            color = MaterialTheme.colorScheme.primary
         )
 
         definitions?.forEachIndexed { index, meaning ->
@@ -38,7 +35,7 @@ fun PartsOfSpeechDefinitionsComponent(
                     withStyle(
                         style = SpanStyle(
                             fontFamily = montserrat,
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.SemiBold
                         )
                     ) {
@@ -46,7 +43,8 @@ fun PartsOfSpeechDefinitionsComponent(
                     }
                     withStyle(
                         style = SpanStyle(
-                            fontFamily = montserrat
+                            fontFamily = montserrat,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     ) {
                         append(meaning.definition ?: "")

@@ -19,16 +19,13 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import io.github.jan.supabase.realtime.Realtime
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
-import javax.inject.Qualifier
 import javax.inject.Singleton
-
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -46,9 +43,6 @@ object AppModule {
         ).build()
     }
 
-
-
-
     @Provides
     @Singleton
     fun provideSupabaseClient(): SupabaseClient {
@@ -58,41 +52,17 @@ object AppModule {
         ) {
             install(Postgrest)
             install(Auth)
+            install(Realtime)
         }
     }
 
-
-    @Singleton
     @Provides
+    @Singleton
     fun provideAuthenticationRepository(
         client: SupabaseClient
-    ): AuthenticationRepository {
+    ) : AuthenticationRepository {
         return AuthenticationRepositoryImpl(client)
     }
-
-
-//    @Provides
-//    @Singleton
-//    fun provideSupabaseDatabase(client: SupabaseClient): Postgrest {
-//        return client.postgrest
-//    }
-//
-//    @Provides
-//    @Singleton
-//    fun provideSupabaseAuth(client: SupabaseClient): Auth {
-//        return client.auth
-//    }
-//
-//
-//    @Provides
-//    @Singleton
-//    fun provideSupabaseStorage(client: SupabaseClient): Storage {
-//        return client.storage
-//    }
-
-    @IoDispatcher
-    @Provides
-    fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Singleton
     @Provides
@@ -127,20 +97,15 @@ object AppModule {
     fun provideDictionaryRepository(
         api: ApiInterface,
         client: SupabaseClient,
-        @IoDispatcher ioDispatcher: CoroutineDispatcher,
         historyDatabase: HistoryDatabase
     ): DictionaryRepository {
         return DictionaryRepositoryImpl(
             api = api,
             client = client,
-            ioDispatcher = ioDispatcher,
             historyDatabase = historyDatabase
         )
     }
 }
 
-@Retention
-@Qualifier
-annotation class IoDispatcher
 
 

@@ -1,4 +1,4 @@
-package com.fikrielg.dictionarypocket.data.source.remote
+package com.fikrielg.dictionarypocket.data.source.remote.model
 
 data class ErrorResponse(
     val message: String,
