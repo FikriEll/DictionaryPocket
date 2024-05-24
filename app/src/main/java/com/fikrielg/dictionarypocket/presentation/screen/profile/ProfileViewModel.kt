@@ -3,6 +3,7 @@ package com.fikrielg.dictionarypocket.presentation.screen.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fikrielg.dictionarypocket.data.repository.AuthenticationRepository
+import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
 import com.rmaprojects.apirequeststate.ResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +14,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(private val repository: AuthenticationRepository) :
+class ProfileViewModel @Inject constructor(
+    private val authenticationRepository: AuthenticationRepository,
+    private val repository: DictionaryRepository
+) :
     ViewModel() {
 
     private val _editUsernameState = MutableStateFlow<ResponseState<Boolean>>(ResponseState.Idle)
@@ -33,15 +37,15 @@ class ProfileViewModel @Inject constructor(private val repository: Authenticatio
 
     fun onEditUsername(username: String) {
         viewModelScope.launch {
-           _editUsernameState.emitAll(repository.updateUsername(username))
+            _editUsernameState.emitAll(authenticationRepository.updateUsername(username))
         }
     }
 
     fun onLogout() {
         viewModelScope.launch {
-            _signOutstate.emitAll(repository.signOut())
+            repository.deleteAllHistory()
+            _signOutstate.emitAll(authenticationRepository.signOut())
         }
     }
-
 
 }

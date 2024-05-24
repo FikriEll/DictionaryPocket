@@ -3,7 +3,7 @@ package com.fikrielg.dictionarypocket.presentation.screen.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
-import com.fikrielg.dictionarypocket.presentation.screen.home.UiState
+import com.fikrielg.dictionarypocket.presentation.screen.home.DefinitionsState
 import com.fikrielg.dictionarypocket.util.UiEvents
 import com.rmaprojects.apirequeststate.ResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,15 +21,15 @@ class DetailViewModel @Inject constructor(
     private val repository: DictionaryRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val _detailState = MutableStateFlow(DefinitionsState())
+    val detailState: StateFlow<DefinitionsState> = _detailState.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<UiEvents>()
     val eventFlow: SharedFlow<UiEvents> = _eventFlow.asSharedFlow()
 
     fun getDefinition(word: String) {
-        _uiState.value =
-            uiState.value.copy(
+        _detailState.value =
+            detailState.value.copy(
                 isLoading = true
             )
 
@@ -37,26 +37,26 @@ class DetailViewModel @Inject constructor(
             repository.getDefinition(word).collect { response ->
                 when (response) {
                     is ResponseState.Error -> {
-                        _uiState.value = uiState.value.copy(
+                        _detailState.value = detailState.value.copy(
                             isLoading = false,
                             definition = emptyList()
                         )
 
                         _eventFlow.emit(
-                            UiEvents.ShowSnackbar(
+                            UiEvents.ShowErrorSnackbar(
                                 message = response.message ?: "Something went wrong!"
                             )
                         )
                     }
 
                     is ResponseState.Success -> {
-                        _uiState.value = uiState.value.copy(
+                        _detailState.value = detailState.value.copy(
                             isLoading = false,
                             definition = response.data
                         )
                     }
                     else -> {
-                        uiState
+                        detailState
                     }
                 }
             }

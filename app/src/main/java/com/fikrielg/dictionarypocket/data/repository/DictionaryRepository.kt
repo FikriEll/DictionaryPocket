@@ -11,6 +11,7 @@ interface DictionaryRepository {
     fun getHistoryList(): Flow<List<History>>
     suspend fun addHistory(history: History)
     suspend fun deleteHistory(history: History)
+    suspend fun deleteAllHistory()
     suspend fun getBookmarkList(): Result<Flow<List<Bookmark>>>
     fun addBookmark(bookmarks: Bookmark): Flow<ResponseState<Boolean>>
     suspend fun unsubscribeChannel()

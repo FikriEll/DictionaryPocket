@@ -3,6 +3,7 @@ package com.fikrielg.dictionarypocket.data.repository
 import android.util.Log
 import com.fikrielg.dictionarypocket.data.kotpref.AuthPref
 import com.fikrielg.dictionarypocket.data.source.remote.model.User
+import com.fikrielg.dictionarypocket.util.GlobalState
 import com.rmaprojects.apirequeststate.ResponseState
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
@@ -27,7 +28,6 @@ class AuthenticationRepositoryImpl @Inject constructor(
                     this.email = email
                     this.password = password
                 }
-
                 val user = client.auth.currentUserOrNull()
                 val publicUser = client.from("users")
                     .select {
@@ -35,13 +35,12 @@ class AuthenticationRepositoryImpl @Inject constructor(
                             User::id eq user?.id
                         }
                     }.decodeSingle<User>()
-
                 AuthPref.apply {
                     this.id = publicUser.id!!
                     this.username = publicUser.username
-                    this.isLogin = true
+                    this.isSignInDone = true
                 }
-
+                GlobalState.isSignInDone = true
                 emit(ResponseState.Success(true))
             } catch (e: Exception) {
                 emit(ResponseState.Error(e.message.toString()))
@@ -64,7 +63,6 @@ class AuthenticationRepositoryImpl @Inject constructor(
                     put("username", username)
                 }
             }
-
             val user = client.auth.currentUserOrNull()
             val publicUser = client.from("users")
                 .select {
@@ -72,12 +70,12 @@ class AuthenticationRepositoryImpl @Inject constructor(
                         User::id eq user?.id
                     }
                 }.decodeSingle<User>()
-
             AuthPref.apply {
                 this.id = publicUser.id!!
                 this.username = publicUser.username
-                this.isLogin = true
+                this.isSignInDone = true
             }
+            GlobalState.isSignInDone = true
             emit(ResponseState.Success(true))
         } catch (e: Exception) {
             emit(ResponseState.Error(e.message.toString()))
@@ -101,7 +99,8 @@ class AuthenticationRepositoryImpl @Inject constructor(
             val publicUser = client.from("users")
                 .select {
                     filter {
-                        User::id eq AuthPref.id                    }
+                        User::id eq AuthPref.id
+                    }
                 }.decodeSingle<User>()
             AuthPref.apply {
                 this.username = publicUser.username
@@ -116,9 +115,11 @@ class AuthenticationRepositoryImpl @Inject constructor(
     override suspend fun signOut(): Flow<ResponseState<Boolean>> = flow {
         emit(ResponseState.Loading)
         try {
+            AuthPref.clear()
+            GlobalState.isSignInDone = false
             client.auth.signOut()
             emit(ResponseState.Success(true))
-        } catch (e: Exception){
+        } catch (e: Exception) {
             emit(ResponseState.Error(e.message.toString()))
         }
     }

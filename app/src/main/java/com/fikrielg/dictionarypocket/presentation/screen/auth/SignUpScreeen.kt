@@ -3,6 +3,7 @@ package com.fikrielg.dictionarypocket.presentation.screen.auth
 import StackedSnackbarDuration
 import StackedSnackbarHost
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,9 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fikrielg.dictionarypocket.R
 import com.fikrielg.dictionarypocket.presentation.screen.auth.component.AuthTextFieldComponent
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.HomeScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.SignInScreenDestination
+import com.fikrielg.dictionarypocket.presentation.screen.destinations.SignUpScreenDestination
 import com.fikrielg.dictionarypocket.util.emailChecked
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -105,18 +109,6 @@ fun SignUpScreen(
 
     Scaffold(
         snackbarHost = { StackedSnackbarHost(hostState = stackedSnackbarHostState) },
-        topBar = {
-            TopAppBar(
-                navigationIcon = {
-                },
-                title = {
-                    Text(
-                        text = "Welcome to Dictionary Pocket",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                },
-            )
-        }
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -126,6 +118,21 @@ fun SignUpScreen(
         ) {
 
             val localSoftwareKeyboardController = LocalSoftwareKeyboardController.current
+
+            Image(painter = painterResource(id = R.drawable.sign_up_rafiki), contentDescription = null)
+
+            Text(
+                text = "Let's create an account",
+                lineHeight = 40.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 30.sp,
+                modifier = Modifier.clickable {
+                    navigator.navigate(SignUpScreenDestination)
+                }
+            )
+
+            Spacer(modifier = modifier.height(20.dp))
 
             AuthTextFieldComponent(
                 onValueChange = { username = it },
@@ -221,7 +228,6 @@ fun SignUpScreen(
                     }
                 )
             }
-
         }
     }
 }

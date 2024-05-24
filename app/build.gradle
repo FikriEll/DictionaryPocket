@@ -25,6 +25,7 @@ android {
         Properties properties = new Properties()
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
         buildConfigField ("String", "API_DICTIONARY_BASE_URL", "\"${properties.getProperty("API_DICTIONARY_BASE_URL")}\"")
+        buildConfigField ("String", "API_KBBI_BASE_URL", "\"${properties.getProperty("API_KBBI_BASE_URL")}\"")
         buildConfigField ("String", "DICTIONARY_POCKET_SUPABASE_URL", "\"${properties.getProperty("DICTIONARY_POCKET_SUPABASE_URL")}\"")
         buildConfigField ("String", "DICTIONARY_POCKET_SUPABASE_KEY", "\"${properties.getProperty("DICTIONARY_POCKET_SUPABASE_KEY")}\"")
     }
@@ -144,6 +145,13 @@ dependencies {
 
     // stacked snackbar
     implementation "io.github.rizmaulana:compose-stacked-snackbar:1.0.4"
+
+
+    // pager and indicators - accompanist
+    def accompanist_version = "0.20.3"
+    implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-pager-indicators:$accompanist_version"
+
 
 }
 

@@ -1,27 +1,36 @@
 package com.fikrielg.dictionarypocket.presentation.screen.home
 
 import StackedSnackbarAnimation
+import StackedSnackbarDuration
 import StackedSnackbarHost
 import android.annotation.SuppressLint
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,28 +43,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fikrielg.dictionarypocket.data.kotpref.AuthPref
+import com.fikrielg.dictionarypocket.data.kotpref.DictionaryPocketPref
 import com.fikrielg.dictionarypocket.data.source.local.entities.History
 import com.fikrielg.dictionarypocket.data.source.remote.model.Bookmark
 import com.fikrielg.dictionarypocket.data.source.remote.model.Meaning
 import com.fikrielg.dictionarypocket.data.source.remote.model.Phonetic
-import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketAppBar
+import com.fikrielg.dictionarypocket.presentation.component.DialogMessage
+import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketCustomDialog
+import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketUserAvatar
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.BookmarkScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.ProfileScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.TranslateScreenDestination
-import com.fikrielg.dictionarypocket.presentation.screen.home.component.EmptyComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.DefinitionsEmptyComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.DefinitionsLoadingComponent
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.HistoryItem
-import com.fikrielg.dictionarypocket.presentation.screen.home.component.LoadingComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.MeaningKbbiItem
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.MeaningsKbbiEmptyComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.MeaningsKbbiLoadingComponent
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.PartsOfSpeechDefinitionsItem
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.PronunciationItem
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.SearchTextFieldComponent
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
+import com.fikrielg.dictionarypocket.util.GlobalState
 import com.fikrielg.dictionarypocket.util.UiEvents
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -65,11 +84,13 @@ import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import rememberStackedSnackbarHostState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SuspiciousIndentation")
 @Destination(start = true)
 @Composable
 fun HomeScreen(
     navigator: DestinationsNavigator,
+    modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
 
@@ -82,31 +103,94 @@ fun HomeScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is UiEvents.ShowSnackbar -> {
-                    scope.launch { stackedSnackbarHostState.showInfoSnackbar(event.message) }
+                is UiEvents.ShowSuccesSnackbar -> {
+                    scope.launch {
+                        stackedSnackbarHostState.showSuccessSnackbar(
+                            event.message,
+                            duration = StackedSnackbarDuration.Short
+                        )
+                    }
                 }
+
+                is UiEvents.ShowErrorSnackbar -> {
+                    scope.launch {
+                        stackedSnackbarHostState.showErrorSnackbar(
+                            event.message,
+                            duration = StackedSnackbarDuration.Short
+                        )
+                    }
+                }
+
+                is UiEvents.ShowInfoSnackbar -> {
+                    scope.launch {
+                        stackedSnackbarHostState.showInfoSnackbar(
+                            event.message,
+                            duration = StackedSnackbarDuration.Short
+                        )
+                    }
+                }
+
                 else -> {}
             }
         }
     }
 
-    val uiState = viewModel.uiState.collectAsState().value
+    val definitionsState = viewModel.definitionsState.collectAsState().value
+    val meaningsKbbiState = viewModel.meaningsKbbiState.collectAsState().value
     val typedWord = viewModel.typedWord.value
     val definitions =
-        if (uiState.definition?.isNotEmpty() == true) uiState.definition[0].meanings
+        if (definitionsState.definition?.isNotEmpty() == true) definitionsState.definition[0].meanings
             ?: emptyList()
         else emptyList()
     val historyList = viewModel.historyState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
 
-        Scaffold(
-            snackbarHost = { StackedSnackbarHost(hostState = stackedSnackbarHostState) },
-            topBar = {
-                DictionaryPocketAppBar(
-                    currentDestinationTitle = "Dictionary Pocket",
-                    navigateUp = { /*TODO*/ },
-                    isHomeScreen = true,
-                    actions = {
+
+    Scaffold(
+        snackbarHost = { StackedSnackbarHost(hostState = stackedSnackbarHostState) },
+        topBar = {
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.background),
+                title = {
+                    val titleHome = if (!GlobalState.isKBBIPocket) {
+                        buildAnnotatedString {
+                            append("Dictionary Pocket")
+                        }
+                    } else {
+                        buildAnnotatedString {
+                            append("KBBI Pocket ")
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.secondary)) {
+                                append("BETA")
+                            }
+                        }
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = titleHome,
+                            fontFamily = montserrat,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = modifier.width(10.dp))
+                        IconButton(
+                            modifier = modifier.size(20.dp),
+                            onClick = {
+                                    DictionaryPocketPref.isKBBIPocketMode =
+                                        !DictionaryPocketPref.isKBBIPocketMode
+                                    GlobalState.isKBBIPocket = DictionaryPocketPref.isKBBIPocketMode
+                            }) {
+                            Icon(
+                                imageVector = Icons.Default.Autorenew,
+                                contentDescription = "Change to KBBI Pocket",
+                                tint = Color.Gray
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    if (!GlobalState.isKBBIPocket) {
                         IconButton(onClick = { navigator.navigate(BookmarkScreenDestination) }) {
                             Icon(
                                 imageVector = Icons.Default.Bookmarks,
@@ -115,57 +199,65 @@ fun HomeScreen(
                             )
                         }
                     }
-                )
-            }
-        ) { paddingValues ->
-            HomeContent(
-                uiState = uiState,
-                typedWord = typedWord,
-                setWordToBeSearched = { word ->
-                    viewModel.setTypedWord(typedWord = word)
                 },
-                searchWord = {
-                    viewModel.getDefinition()
-                },
-                meanings = definitions,
-                paddingValues = paddingValues,
-                historyList = historyList,
-                onSwipeToDelete = viewModel::deleteHistory,
-                onSwipeToAddBookmark = { history ->
-                    viewModel.addBookmark(
-                        Bookmark(
-                            userId = AuthPref.id,
-                            word = history.word ?: "",
-                        )
-                    )
-                },
-                onClickToListen = { text ->
-                    viewModel.textToSpeech(context, text)
-                },
-                onClickToProfile = {
-                    navigator.navigate(ProfileScreenDestination)
-                },
-                onClickToAddBookmark = { word ->
-                    viewModel.addBookmark(
-                        Bookmark(
-                            userId = AuthPref.id,
-                            word = word,
-                        )
-                    )
-                },
-                onClickToGTranslate = { word ->
-                    navigator.navigate(TranslateScreenDestination(word))
-                },
+                navigationIcon = {
+                    DictionaryPocketUserAvatar(
+                        fullName = AuthPref.username,
+                        size = 36.dp,
+                        onClickToProfile = {
+                            navigator.navigate(ProfileScreenDestination)
+                        })
+                }
             )
         }
-
+    ) { paddingValues ->
+        HomeContent(
+            definitionsState = definitionsState,
+            meaningsKbbiState = meaningsKbbiState,
+            typedWord = typedWord,
+            setWordToBeSearched = { word ->
+                viewModel.setTypedWord(typedWord = word)
+            },
+            searchWord = {
+                if (!GlobalState.isKBBIPocket) viewModel.getDefinition() else viewModel.getMeaningsKbbi()
+            },
+            meanings = definitions,
+            paddingValues = paddingValues,
+            historyList = historyList,
+            onSwipeToDelete = viewModel::deleteHistory,
+            onSwipeToAddBookmark = { history ->
+                viewModel.addBookmark(
+                    Bookmark(
+                        userId = AuthPref.id,
+                        word = history.word ?: "",
+                    )
+                )
+            },
+            onClickToListen = { text ->
+                viewModel.textToSpeech(context, text)
+            },
+            onClickToAddBookmark = { word ->
+                viewModel.addBookmark(
+                    Bookmark(
+                        userId = AuthPref.id,
+                        word = word,
+                    )
+                )
+            },
+            onClickToGTranslate = { word ->
+                navigator.navigate(TranslateScreenDestination(word))
+            },
+        )
     }
+
+}
 
 
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
-    uiState: UiState,
+    definitionsState: DefinitionsState,
+    meaningsKbbiState: MeaningsKbbiState,
     typedWord: String,
     setWordToBeSearched: (String) -> Unit,
     searchWord: () -> Unit,
@@ -177,7 +269,6 @@ fun HomeContent(
     onClickToListen: (String) -> Unit,
     onClickToAddBookmark: (String) -> Unit,
     onClickToGTranslate: (String) -> Unit,
-    onClickToProfile: () -> Unit,
 ) {
 
     var isSearchEmpty by remember { mutableStateOf(true) }
@@ -190,19 +281,17 @@ fun HomeContent(
 
 
         Column(modifier = modifier.padding(vertical = 6.dp, horizontal = 20.dp)) {
+
             Text(
-                text = "Hello ${AuthPref.username}!👋",
+                text = if (!GlobalState.isKBBIPocket) "Hello ${AuthPref.username}!👋" else "Hai ${AuthPref.username}!👋",
                 fontFamily = montserrat,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = modifier.clickable {
-                    onClickToProfile()
-                }
+                color = if (!GlobalState.isKBBIPocket) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
             )
             Spacer(modifier = modifier.height(6.dp))
             Text(
-                text = "What meaning do you want to know today?",
+                text = if (!GlobalState.isKBBIPocket) "What meaning do you want to know today?" else "Apa arti yang ingin kamu ketahui hari ini?",
                 fontFamily = montserrat,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -218,8 +307,7 @@ fun HomeContent(
         }
 
         LazyColumn(contentPadding = PaddingValues(bottom = 14.dp, start = 14.dp, end = 14.dp)) {
-
-            if (isSearchEmpty) {
+            if (isSearchEmpty && !GlobalState.isKBBIPocket) {
                 item {
                     Text(
                         text = "History",
@@ -232,7 +320,6 @@ fun HomeContent(
                         modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
                     )
                 }
-
                 items(historyList) { history ->
                     val delete = SwipeAction(
                         onSwipe = {
@@ -277,34 +364,80 @@ fun HomeContent(
                 }
             }
 
-            if (uiState.isLoading && uiState.definition.isNullOrEmpty() && !isSearchEmpty) {
+            if (historyList.isEmpty() && isSearchEmpty && !GlobalState.isKBBIPocket) {
                 item {
-                    Box(
-                        modifier = modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LoadingComponent(
-                            isLoading = uiState.isLoading
-                        )
-
-                        EmptyComponent(
-                            isLoading = uiState.isLoading,
-                            definition = uiState.definition
+                        Text(
+                            text = "You haven't searched any words yet",
+                            style = TextStyle(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                fontFamily = montserrat,
+                                color = MaterialTheme.colorScheme.onBackground
+                            ),
+                            modifier = Modifier.padding(top = 20.dp)
                         )
                     }
                 }
             }
 
-            if (!uiState.isLoading && !uiState.definition.isNullOrEmpty() && !isSearchEmpty) {
+            if (!GlobalState.isKBBIPocket && definitionsState.isLoading && definitionsState.definition.isNullOrEmpty()) {
+                item {
+                    Box(
+                        modifier = modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        DefinitionsLoadingComponent(
+                            isLoading = definitionsState.isLoading
+                        )
+
+                        DefinitionsEmptyComponent(
+                            isLoading = definitionsState.isLoading,
+                            definition = definitionsState.definition,
+                        )
+                    }
+                }
+            }
+
+            if (GlobalState.isKBBIPocket && meaningsKbbiState.isLoading) {
+                item {
+                    Box(
+                        modifier = modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        MeaningsKbbiLoadingComponent(
+                            isLoading = meaningsKbbiState.isLoading
+                        )
+
+                        MeaningsKbbiEmptyComponent(
+                            isLoading = meaningsKbbiState.isLoading,
+                            meanings = meaningsKbbiState.meanings,
+                        )
+                    }
+                }
+            }
+
+            if (GlobalState.isKBBIPocket && !meaningsKbbiState.isLoading && meaningsKbbiState.meanings != null) {
+                item {
+                    MeaningKbbiItem(
+                        kbbi = meaningsKbbiState.meanings
+                    )
+                }
+            }
+
+            if (!GlobalState.isKBBIPocket && !definitionsState.isLoading && !definitionsState.definition.isNullOrEmpty() && !isSearchEmpty) {
                 item {
                     Spacer(
                         modifier = Modifier.height(15.dp)
                     )
 
-                    val phonetic = getNonNullPhonetic(uiState.definition[0].phonetics)
+                    val phonetic = getNonNullPhonetic(definitionsState.definition[0].phonetics)
 
                     PronunciationItem(
-                        word = uiState.definition[0].word ?: "",
+                        word = definitionsState.definition[0].word ?: "",
                         phonetic = phonetic,
                         onClickToListen = onClickToListen,
                         onClickToAddBookmark = onClickToAddBookmark,

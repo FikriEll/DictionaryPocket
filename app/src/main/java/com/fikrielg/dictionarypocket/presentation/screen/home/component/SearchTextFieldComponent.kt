@@ -24,8 +24,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.fikrielg.dictionarypocket.ui.theme.SkyBlue
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
+import com.fikrielg.dictionarypocket.util.GlobalState
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +47,7 @@ fun SearchTextFieldComponent(
             .fillMaxWidth()
             .semantics { contentDescription = "SearchTextField" },
         placeholder = {
-            Text(text = "Search here", fontFamily = montserrat, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = if(!GlobalState.isKBBIPocket) "Let's find your word" else "Mari cari kata kamu", fontFamily = montserrat, color = MaterialTheme.colorScheme.onSurface)
         },
         leadingIcon = {
             Icon(
@@ -69,6 +69,11 @@ fun SearchTextFieldComponent(
                 }
             }
         },
+        colors = TextFieldDefaults.textFieldColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            unfocusedIndicatorColor = Color(0xFFEBE7E7),
+            focusedIndicatorColor = if(!GlobalState.isKBBIPocket) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+        ),
         shape = RoundedCornerShape(30.dp),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(

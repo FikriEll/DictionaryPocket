@@ -4,7 +4,7 @@ package com.fikrielg.dictionarypocket.data.repository
 import com.fikrielg.dictionarypocket.data.kotpref.AuthPref
 import com.fikrielg.dictionarypocket.data.source.local.HistoryDatabase
 import com.fikrielg.dictionarypocket.data.source.local.entities.History
-import com.fikrielg.dictionarypocket.data.source.remote.ApiInterface
+import com.fikrielg.dictionarypocket.data.source.remote.DictionaryApiInterface
 import com.fikrielg.dictionarypocket.data.source.remote.model.DictionaryResponse
 import com.fikrielg.dictionarypocket.data.source.remote.model.Bookmark
 import com.haroldadmin.cnradapter.NetworkResponse
@@ -28,7 +28,7 @@ import javax.inject.Inject
 
 
 class DictionaryRepositoryImpl @Inject constructor(
-    private val api: ApiInterface,
+    private val api: DictionaryApiInterface,
     private val client: SupabaseClient,
     private val historyDatabase: HistoryDatabase,
 ) : DictionaryRepository {
@@ -73,6 +73,10 @@ class DictionaryRepositoryImpl @Inject constructor(
 
     override suspend fun deleteHistory(history: History) {
         return historyDatabase.historyDao().deleteHistory(history)
+    }
+
+    override suspend fun deleteAllHistory() {
+        return historyDatabase.historyDao().deleteAllHistory()
     }
 
     private val dictionaryPocketChannel = client.channel("dictionarypocket")

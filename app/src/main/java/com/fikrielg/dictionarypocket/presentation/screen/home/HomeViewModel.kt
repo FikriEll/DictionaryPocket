@@ -8,9 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
+import com.fikrielg.dictionarypocket.data.repository.KbbiRepository
 import com.fikrielg.dictionarypocket.data.source.local.entities.History
 import com.fikrielg.dictionarypocket.data.source.remote.model.DictionaryResponse
 import com.fikrielg.dictionarypocket.data.source.remote.model.Bookmark
+import com.fikrielg.dictionarypocket.data.source.remote.model.KbbiResponse
 import com.fikrielg.dictionarypocket.util.UiEvents
 import com.rmaprojects.apirequeststate.ResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,11 +29,17 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val repository: DictionaryRepository) :
+class HomeViewModel @Inject constructor(
+    private val repository: DictionaryRepository,
+    private val kkbiRepository: KbbiRepository
+) :
     ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val _definitionsState = MutableStateFlow(DefinitionsState())
+    val definitionsState: StateFlow<DefinitionsState> = _definitionsState.asStateFlow()
+
+    private val _meaningsKbbiState = MutableStateFlow(MeaningsKbbiState())
+    val meaningsKbbiState: StateFlow<MeaningsKbbiState> = _meaningsKbbiState.asStateFlow()
 
     private val _typedWord = mutableStateOf("")
     val typedWord: State<String> = _typedWord
@@ -52,7 +60,13 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
     fun deleteHistory(history: History) {
         viewModelScope.launch {
             try {
+                _eventFlow.emit(
+                    UiEvents.ShowSuccesSnackbar(
+                        message = "Successful deleting from history"
+                    )
+                )
                 repository.deleteHistory(history)
+
             } catch (e: Exception) {
                 Log.e("Error Delete History", "Error deleting history", e)
             }
@@ -63,8 +77,8 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
 
 
     fun getDefinition() {
-        _uiState.value =
-            uiState.value.copy(
+        _definitionsState.value =
+            definitionsState.value.copy(
                 isLoading = true
             )
 
@@ -75,20 +89,20 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
                 repository.getDefinition(word = word).collect { response ->
                     when (response) {
                         is ResponseState.Error -> {
-                            _uiState.value = uiState.value.copy(
+                            _definitionsState.value = definitionsState.value.copy(
                                 isLoading = false,
                                 definition = emptyList()
                             )
 
                             _eventFlow.emit(
-                                UiEvents.ShowSnackbar(
+                                UiEvents.ShowErrorSnackbar(
                                     message = response.message ?: "Something went wrong!"
                                 )
                             )
                         }
 
                         is ResponseState.Success -> {
-                            _uiState.value = uiState.value.copy(
+                            _definitionsState.value = definitionsState.value.copy(
                                 isLoading = false,
                                 definition = response.data
                             )
@@ -108,7 +122,50 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
                         }
 
                         else -> {
-                            uiState
+                            definitionsState
+                        }
+                    }
+                }
+            }
+        } else {
+            showErrorMessage()
+        }
+    }
+
+    fun getMeaningsKbbi() {
+        _meaningsKbbiState.value =
+            meaningsKbbiState.value.copy(
+                isLoading = true
+            )
+
+        val word = typedWord.value
+
+        if (word.isNotEmpty()) {
+            viewModelScope.launch {
+                kkbiRepository.getMeaningsKbbi(kata = word).collect { response ->
+                    when (response) {
+                        is ResponseState.Error -> {
+                            _meaningsKbbiState.value = meaningsKbbiState.value.copy(
+                                isLoading = false,
+                                meanings = null
+                            )
+
+                            _eventFlow.emit(
+                                UiEvents.ShowErrorSnackbar(
+                                    message = response.message ?: "Something went wrong!"
+                                )
+                            )
+                        }
+
+                        is ResponseState.Success -> {
+                            _meaningsKbbiState.value = meaningsKbbiState.value.copy(
+                                isLoading = false,
+                                meanings = response.data
+                            )
+                        }
+
+                        else -> {
+                            definitionsState
                         }
                     }
                 }
@@ -122,15 +179,32 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
         viewModelScope.launch {
             try {
                 repository.addBookmark(bookmarks).collect {
-                    when(it) {
+                    when (it) {
                         is ResponseState.Success -> {
-                            Log.d("Success Add Bookmarks", "Successful adding to bookmarks ")
+                            Log.d("Success Add Bookmarks", "Successful adding to bookmarks")
+                            _eventFlow.emit(
+                                UiEvents.ShowSuccesSnackbar(
+                                    message = "Successful adding to bookmarks"
+                                )
+                            )
                         }
+                        is ResponseState.Error -> {
+                            _eventFlow.emit(
+                                UiEvents.ShowInfoSnackbar(
+                                    message = "The word is already in the bookmarks"
+                                )
+                            )                        }
+
                         else -> {}
                     }
                 }
             } catch (e: Exception) {
                 Log.d("Error Add Bookmark", "Error adding bookmark", e)
+                _eventFlow.emit(
+                    UiEvents.ShowErrorSnackbar(
+                        message = e.message.toString()
+                    )
+                )
             }
         }
     }
@@ -153,13 +227,13 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
 
     private fun showErrorMessage() {
         viewModelScope.launch {
-            _uiState.value =
-                uiState.value.copy(
+            _definitionsState.value =
+                definitionsState.value.copy(
                     isLoading = false
                 )
 
             _eventFlow.emit(
-                UiEvents.ShowSnackbar(
+                UiEvents.ShowInfoSnackbar(
                     message = "Please enter a word"
                 )
             )
@@ -170,13 +244,16 @@ class HomeViewModel @Inject constructor(private val repository: DictionaryReposi
 }
 
 
-data class UiState(
+data class DefinitionsState(
     val definition: List<DictionaryResponse>? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
 )
 
-
-
+data class MeaningsKbbiState(
+    val meanings: KbbiResponse? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+)
 
 

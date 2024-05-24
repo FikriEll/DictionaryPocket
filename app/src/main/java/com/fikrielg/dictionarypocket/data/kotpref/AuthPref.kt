@@ -5,5 +5,5 @@ import com.chibatching.kotpref.KotprefModel
 object AuthPref : KotprefModel() {
     var id by stringPref("")
     var username by stringPref("")
-    var isLogin by booleanPref(false)
+    var isSignInDone by booleanPref(false)
 }

@@ -1,23 +1,28 @@
 package com.fikrielg.dictionarypocket.presentation.screen.profile
 
+import StackedSnackbarDuration
 import StackedSnackbarHost
-import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextFieldDefaults.textFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -46,12 +54,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fikrielg.dictionarypocket.data.kotpref.AuthPref
 import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketAppBar
+import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketCustomDialog
 import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketUserAvatar
+import com.fikrielg.dictionarypocket.presentation.component.DialogMessage
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.HomeScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.ProfileScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.SignInScreenDestination
-import com.fikrielg.dictionarypocket.ui.theme.SkyBlue
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
+import com.fikrielg.dictionarypocket.util.GlobalState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.popUpTo
@@ -130,17 +140,6 @@ fun ProfileScreen(
             DictionaryPocketAppBar(
                 currentDestinationTitle = "Profile",
                 navigateUp = { navigator.popBackStack() },
-                actions = {
-                    IconButton(onClick = {
-                        showAlertDialog = true
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Logout,
-                            contentDescription = "Sign Out",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                }
             )
         }
     ) { paddingValues ->
@@ -171,14 +170,18 @@ fun ProfileScreen(
                     Text(text = username, fontFamily = montserrat)
                 },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Default.Person, contentDescription = "")
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 },
-                shape = RoundedCornerShape(30.dp),
-                colors = textFieldColors(
-                    containerColor = Color(0xFFEBE7E7),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
                     unfocusedIndicatorColor = Color(0xFFEBE7E7),
-                    focusedIndicatorColor = SkyBlue
+                    focusedIndicatorColor = if (!GlobalState.isKBBIPocket) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                 ),
+                shape = RoundedCornerShape(30.dp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
                     onDone = {
@@ -200,53 +203,57 @@ fun ProfileScreen(
                 Text("Change Username")
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
 
-            if (showAlertDialog) {
-                AlertDialog(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Logout,
-                            contentDescription = null
+
+            Box(
+                modifier = modifier
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.secondary,
+                                Color(0xFF922121),
+                            )
                         )
-                    },
-                    title = { Text(text = "Sign Out") },
-                    text = {
-                        Text(
-                            text = "Are you sure you want to sign up for this account?",
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    onDismissRequest = { showAlertDialog = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                viewModel.onLogout()
-                                AuthPref.isLogin = false
-                                navigator.navigate(SignInScreenDestination) {
-                                    popUpTo(ProfileScreenDestination) {
-                                        inclusive = true
-                                    }
-                                    popUpTo(HomeScreenDestination) {
-                                        inclusive = true
-                                    }
-                                    launchSingleTop = true
-                                }
-                            }) {
-                            Text(text = "Confirm")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = {
-                                showAlertDialog = false
-                            }) {
-                            Text(text = "Cancel")
-                        }
-                    }
-                )
+                    )
+                    .clickable(onClick = {
+                        showAlertDialog = true
+                    })
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Icon(imageVector = Icons.Default.Logout, contentDescription = "", tint = MaterialTheme.colorScheme.surface)
+                    Spacer(modifier = modifier.width(6.dp))
+                    Text("Sign Out", color = MaterialTheme.colorScheme.surface)
+                }
             }
 
 
+            DictionaryPocketCustomDialog(
+                showDialog = showAlertDialog,
+                onDismissRequest = { showAlertDialog = false }
+            ) {
+                DialogMessage(
+                    onDismissRequest = { showAlertDialog = false },
+                    title = "Sign Out",
+                    message = "Are you sure you want to sign up for this account?",
+                    dismissText = "Cancel",
+                    confirmText = "Confirm",
+                    icon = Icons.Default.Logout,
+                    onConfirmRequest = {
+                        showAlertDialog = false
+                        viewModel.onLogout()
+                    },
+                )
+            }
         }
     }
 }

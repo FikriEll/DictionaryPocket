@@ -49,7 +49,8 @@ val DarkThemeColorSchema = darkColorScheme(
     tertiary = Tertiary02,
     onTertiary = Tertiary02,
     errorContainer = ErrorContainer02,
-    onErrorContainer = OnErrorContainer02
+    onErrorContainer = OnErrorContainer02,
+    secondary = Secondary02
 )
 val LightThemeColorSchema = lightColorScheme(
     primary = Primary01,
@@ -63,7 +64,9 @@ val LightThemeColorSchema = lightColorScheme(
     tertiary = Tertiary01,
     onTertiary = Tertiary01,
     errorContainer = ErrorContainer01,
-    onErrorContainer = OnErrorContainer01
+    onErrorContainer = OnErrorContainer01,
+    secondary = Secondary01
+
 )
 
 //@Composable

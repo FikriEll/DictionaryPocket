@@ -7,8 +7,11 @@ import com.fikrielg.dictionarypocket.data.repository.AuthenticationRepository
 import com.fikrielg.dictionarypocket.data.repository.AuthenticationRepositoryImpl
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepository
 import com.fikrielg.dictionarypocket.data.repository.DictionaryRepositoryImpl
+import com.fikrielg.dictionarypocket.data.repository.KbbiRepository
+import com.fikrielg.dictionarypocket.data.repository.KbbiRepositoryImpl
 import com.fikrielg.dictionarypocket.data.source.local.HistoryDatabase
-import com.fikrielg.dictionarypocket.data.source.remote.ApiInterface
+import com.fikrielg.dictionarypocket.data.source.remote.DictionaryApiInterface
+import com.fikrielg.dictionarypocket.data.source.remote.KbbiApiInterface
 import com.haroldadmin.cnradapter.NetworkResponseAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -78,24 +81,31 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit(): Retrofit = Retrofit.Builder()
+    fun provideDictionaryApiInterface(): DictionaryApiInterface = Retrofit.Builder()
         .baseUrl(
             BuildConfig.API_DICTIONARY_BASE_URL
         ).addCallAdapterFactory(NetworkResponseAdapterFactory())
         .addConverterFactory(GsonConverterFactory.create())
         .client(loggingInterceptor())
         .build()
+        .create()
 
     @Singleton
     @Provides
-    fun provideApiInterface(retrofit: Retrofit): ApiInterface {
-        return retrofit.create()
-    }
+    fun provideKKBIApiInterface(): KbbiApiInterface = Retrofit.Builder()
+        .baseUrl(
+            BuildConfig.API_KBBI_BASE_URL
+        ).addCallAdapterFactory(NetworkResponseAdapterFactory())
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(loggingInterceptor())
+        .build()
+        .create()
+
 
     @Provides
     @Singleton
     fun provideDictionaryRepository(
-        api: ApiInterface,
+        api: DictionaryApiInterface,
         client: SupabaseClient,
         historyDatabase: HistoryDatabase
     ): DictionaryRepository {
@@ -103,6 +113,16 @@ object AppModule {
             api = api,
             client = client,
             historyDatabase = historyDatabase
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideKBBIRepository(
+        api: KbbiApiInterface,
+    ): KbbiRepository {
+        return KbbiRepositoryImpl(
+            api = api,
         )
     }
 }

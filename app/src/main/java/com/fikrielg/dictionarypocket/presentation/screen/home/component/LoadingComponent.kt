@@ -26,7 +26,7 @@ import com.fikrielg.dictionarypocket.R
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 @Composable
-fun LoadingComponent(isLoading: Boolean) {
+fun DefinitionsLoadingComponent(isLoading: Boolean) {
 
     if (isLoading) {
 
@@ -43,6 +43,34 @@ fun LoadingComponent(isLoading: Boolean) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Please wait while we get the definition...",
+                    fontFamily = montserrat,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MeaningsKbbiLoadingComponent(isLoading: Boolean) {
+
+    if (isLoading) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                LoadingAnimation()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Mohon tunggu untuk mendapatkan arti...",
                     fontFamily = montserrat,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,

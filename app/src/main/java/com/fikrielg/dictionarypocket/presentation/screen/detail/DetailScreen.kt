@@ -1,5 +1,6 @@
 package com.fikrielg.dictionarypocket.presentation.screen.detail
 
+import StackedSnackbarAnimation
 import StackedSnackbarHost
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketAppBar
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.TranslateScreenDestination
 import com.fikrielg.dictionarypocket.presentation.screen.home.HomeViewModel
-import com.fikrielg.dictionarypocket.presentation.screen.home.component.EmptyComponent
-import com.fikrielg.dictionarypocket.presentation.screen.home.component.LoadingComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.DefinitionsEmptyComponent
+import com.fikrielg.dictionarypocket.presentation.screen.home.component.DefinitionsLoadingComponent
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.PartsOfSpeechDefinitionsItem
 import com.fikrielg.dictionarypocket.presentation.screen.home.component.PronunciationItem
 import com.fikrielg.dictionarypocket.presentation.screen.home.getNonNullPhonetic
@@ -58,7 +59,7 @@ fun DetailScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is UiEvents.ShowSnackbar -> {
+                is UiEvents.ShowErrorSnackbar -> {
                     scope.launch { stackedSnackbarHostState.showInfoSnackbar(event.message) }
                 }
 
@@ -67,10 +68,10 @@ fun DetailScreen(
         }
     }
 
-    val uiState = viewModel.uiState.collectAsState().value
+    val detailState = viewModel.detailState.collectAsState().value
     val context = LocalContext.current
     val definitions =
-        if (uiState.definition?.isNotEmpty() == true) uiState.definition[0].meanings
+        if (detailState.definition?.isNotEmpty() == true) detailState.definition[0].meanings
             ?: emptyList()
         else emptyList()
 
@@ -85,37 +86,36 @@ fun DetailScreen(
         Column(
             modifier = modifier
                 .padding(paddingValues)
-                .padding(10.dp)
         ) {
 
             LazyColumn(contentPadding = PaddingValues(bottom = 14.dp, start = 10.dp, end = 10.dp)) {
-                if (uiState.isLoading && uiState.definition.isNullOrEmpty()) {
+                if (detailState.isLoading && detailState.definition.isNullOrEmpty()) {
                     item {
                         Box(
                             modifier = modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            LoadingComponent(
-                                isLoading = uiState.isLoading
+                            DefinitionsLoadingComponent(
+                                isLoading = detailState.isLoading
                             )
 
-                            EmptyComponent(
-                                isLoading = uiState.isLoading,
-                                definition = uiState.definition
+                            DefinitionsEmptyComponent(
+                                isLoading = detailState.isLoading,
+                                definition = detailState.definition
                             )
                         }
                     }
                 }
-                if (!uiState.isLoading && !uiState.definition.isNullOrEmpty()) {
+                if (!detailState.isLoading && !detailState.definition.isNullOrEmpty()) {
                     item {
                         Spacer(
                             modifier = Modifier.height(15.dp)
                         )
 
-                        val phonetic = getNonNullPhonetic(uiState.definition[0].phonetics)
+                        val phonetic = getNonNullPhonetic(detailState.definition[0].phonetics)
 
                         PronunciationItem(
-                            word = uiState.definition[0].word ?: "",
+                            word = detailState.definition[0].word ?: "",
                             phonetic = phonetic,
                             onClickToListen = {
                                 homeViewModel.textToSpeech(context, word)

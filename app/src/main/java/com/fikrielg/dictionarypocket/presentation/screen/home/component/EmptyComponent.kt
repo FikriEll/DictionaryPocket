@@ -24,13 +24,14 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.fikrielg.dictionarypocket.R
 import com.fikrielg.dictionarypocket.data.source.remote.model.DictionaryResponse
+import com.fikrielg.dictionarypocket.data.source.remote.model.KbbiResponse
 import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 
 @Composable
-fun EmptyComponent(
+fun DefinitionsEmptyComponent(
     isLoading: Boolean,
-    definition: List<DictionaryResponse>?
+    definition: List<DictionaryResponse>? = null,
 ) {
 
     if (!isLoading && definition.isNullOrEmpty()) {
@@ -48,6 +49,37 @@ fun EmptyComponent(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Sorry the definition wasn't found...",
+                    fontFamily = montserrat,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MeaningsKbbiEmptyComponent(
+    isLoading: Boolean,
+    meanings: KbbiResponse? = null,
+) {
+
+    if (!isLoading && meanings == null) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                EmptyAnimation()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Arti tidak ditemukan...",
                     fontFamily = montserrat,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,

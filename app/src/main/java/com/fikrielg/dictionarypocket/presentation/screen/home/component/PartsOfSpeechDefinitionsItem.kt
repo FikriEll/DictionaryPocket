@@ -19,10 +19,13 @@ import com.fikrielg.dictionarypocket.ui.theme.montserrat
 
 @Composable
 fun PartsOfSpeechDefinitionsItem(
+    modifier: Modifier = Modifier,
     partsOfSpeech: String,
     definitions: List<Definition>?
 ) {
-    Column {
+    Column(
+        modifier = modifier.padding(horizontal = 10.dp)
+    ) {
         PartsOfSpeechItem(
             headerText = partsOfSpeech,
             size = definitions?.size ?: 0,

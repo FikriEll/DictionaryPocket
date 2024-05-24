@@ -1,11 +1,13 @@
 package com.fikrielg.dictionarypocket.presentation.screen.bookmark
 
+import StackedSnackbarAnimation
 import StackedSnackbarDuration
 import StackedSnackbarHost
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -15,18 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.rounded.DeleteSweep
-import androidx.compose.material.icons.rounded.Logout
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -40,15 +37,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fikrielg.dictionarypocket.presentation.component.DialogMessage
 import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketAppBar
+import com.fikrielg.dictionarypocket.presentation.component.DictionaryPocketCustomDialog
 import com.fikrielg.dictionarypocket.presentation.screen.bookmark.component.BookmarkItem
 import com.fikrielg.dictionarypocket.presentation.screen.destinations.DetailScreenDestination
-import com.fikrielg.dictionarypocket.presentation.screen.destinations.HomeScreenDestination
-import com.fikrielg.dictionarypocket.presentation.screen.destinations.ProfileScreenDestination
-import com.fikrielg.dictionarypocket.presentation.screen.destinations.SignInScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.navigation.popUpTo
 import com.rmaprojects.apirequeststate.ResponseState
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
@@ -65,7 +60,7 @@ fun BookmarkScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val deleteBookmarkState by viewModel.deleteBookmarkState.collectAsStateWithLifecycle()
-    val deleteAllBookmarkState by viewModel.deleteBookmarkState.collectAsStateWithLifecycle()
+    val deleteAllBookmarkState by viewModel.deleteAllBookmarkState.collectAsStateWithLifecycle()
 
     val stackedSnackbarHostState = rememberStackedSnackbarHostState(
         animation = StackedSnackbarAnimation.Slide
@@ -131,14 +126,17 @@ fun BookmarkScreen(
                 currentDestinationTitle = "Bookmark",
                 navigateUp = { navigator.popBackStack() },
                 actions = {
-                    IconButton(onClick = {
-                        showAlertDialog = true
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteSweep,
-                            contentDescription = "Delete All Bookmark",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                    val bookmarkList = (uiState as? ResponseState.Success)?.data
+                    if (bookmarkList?.isNotEmpty() == true){
+                        IconButton(onClick = {
+                            showAlertDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteSweep,
+                                contentDescription = "Delete All Bookmark",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     }
                 }
             )
@@ -166,7 +164,10 @@ fun BookmarkScreen(
                             Text(text = "Bookmark belum ditambahkan")
                         }
                     } else {
-                        LazyColumn() {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(10.dp)
+                        ) {
                             items(bookmarkList) { bookmark ->
                                 val delete = SwipeAction(
                                     onSwipe = {
@@ -179,7 +180,8 @@ fun BookmarkScreen(
                                             modifier = Modifier.padding(16.dp),
                                             tint = Color.White
                                         )
-                                    }, background = Color.Red.copy(alpha = 0.5f),
+                                    },
+                                    background = Color.Red.copy(alpha = 0.5f),
                                     isUndo = true
                                 )
                                 SwipeableActionsBox(
@@ -215,38 +217,21 @@ fun BookmarkScreen(
                 }
             )
 
-            if (showAlertDialog) {
-                AlertDialog(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.DeleteSweep,
-                            contentDescription = null
-                        )
-                    },
-                    title = { Text(text = "Delete All Bookmark") },
-                    text = {
-                        Text(
-                            text = "Are you sure you want to delete all bookmark?",
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
+            DictionaryPocketCustomDialog(
+                showDialog = showAlertDialog,
+                onDismissRequest = { showAlertDialog = false }
+            ) {
+                DialogMessage(
                     onDismissRequest = { showAlertDialog = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                viewModel.deleteAllBookmark()
-                            }) {
-                            Text(text = "Confirm")
-                        }
+                    title = "Delete All Bookmark",
+                    message = "Are you sure you want to delete all bookmark?",
+                    dismissText = "Cancel",
+                    confirmText = "Confirm",
+                    icon = Icons.Default.DeleteSweep,
+                    onConfirmRequest = {
+                        showAlertDialog = false
+                        viewModel.deleteAllBookmark()
                     },
-                    dismissButton = {
-                        TextButton(
-                            onClick = {
-                                showAlertDialog = false
-                            }) {
-                            Text(text = "Cancel")
-                        }
-                    }
                 )
             }
 
